@@ -1,4 +1,4 @@
-// Type definitions for WebTorrent 0.107
+// Type definitions for WebTorrent 0.108.1
 // Project: https://github.com/feross/webtorrent, https://webtorrent.io
 // Definitions by: Bazyli Brzóska <https://github.com/niieani>
 //                 Tomasz Łaziuk <https://github.com/tlaziuk>
@@ -9,28 +9,55 @@
 
 import { Instance as ParseTorrent } from 'parse-torrent';
 import { Instance as SimplePeer } from 'simple-peer';
-import { RequestOptions, Server } from 'http';
+import { Server } from 'http';
 import { Wire } from 'bittorrent-protocol';
 
 declare const WebTorrent: WebTorrent.WebTorrent;
 
 declare namespace WebTorrent {
     interface WebTorrent {
-        new (config?: Options): Instance;
+        new(config?: Options): Instance;
         (config?: Options): Instance;
+        /**
+         * @example "0.107.17"
+         * @since 0.99.1
+         **/
+        VERSION: string;
         WEBRTC_SUPPORT: boolean;
     }
+
     interface Options {
+        /** @default 55 */
         maxConns?: number;
         nodeId?: string | Buffer;
         peerId?: string | Buffer;
-        tracker?: boolean | {};
+        tracker?: boolean | TrackerOptions;
         dht?: boolean | {};
         webSeeds?: boolean;
     }
 
+    interface TrackerOptions {
+		/** tell clients to announce on this interval(ms) */
+		interval: number;
+		/** trust 'x-forwarded-for' header from reverse proxy */
+		trustProxy: number;
+		/** 
+		 * start an http server ?
+		 * @default true
+		 **/
+		http: boolean;
+		/** start a udp server ? (default: true) */
+		udp: boolean;
+		/** start a websocket server ? (default: true) */
+		ws: boolean;
+		/** enable web - based statistics ? (default: true) */
+		stats: boolean;
+		/** black / whitelist fn for disallowing / allowing torrents */
+		filter: Function;
+	}
+
     interface TorrentOptions {
-        announce?: any[];
+        announce?: string[];
         getAnnounceOpts?(): void;
         maxWebConns?: number;
         path?: string;
@@ -134,7 +161,9 @@ declare namespace WebTorrent {
 
         deselect(start: number, end: number, priority: number): void;
 
-        createServer(opts?: RequestOptions): Server;
+        critical(start: number, end: number): void;
+
+        createServer(opts?: { origin: string | false, hostname?: string }): Server;
 
         pause(): void;
 
